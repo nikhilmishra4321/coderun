@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CodeRun</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream: #faf8f3;
+      --cream2: #f3f0e8;
+      --cream3: #e8e3d8;
+      --ink: #1a1814;
+      --ink2: #3d3a35;
+      --ink3: #6b6760;
+      --rule: #d8d3c8;
+      --green: #2d6a4f;
+      --green-light: #e8f2ec;
+      --red: #8b2020;
+      --red-light: #f5e8e8;
+      --amber: #7a5c1e;
+      --amber-light: #f5f0e0;
+    }
+
+    html { font-size: 16px; }
+
+    body {
+      background: var(--cream);
+      color: var(--ink);
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── AUTH ── */
+    #auth-screen {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    .auth-left {
+      width: 420px;
+      flex-shrink: 0;
+      background: var(--ink);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 56px 52px;
+    }
+
+    .auth-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 28px;
+      color: var(--cream);
+      letter-spacing: -0.5px;
+    }
+
+    .auth-brand em {
+      font-style: italic;
+      color: var(--cream3);
+    }
+
+    .auth-tagline {
+      font-size: 13px;
+      color: var(--ink3);
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      margin-top: 6px;
+    }
+
+    .auth-quote {
+      border-left: 2px solid #3a3730;
+      padding-left: 20px;
+    }
+
+    .auth-quote p {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 17px;
+      color: #8a8680;
+      line-height: 1.7;
+    }
+
+    .auth-quote cite {
+      display: block;
+      font-size: 12px;
+      color: #5a5750;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 12px;
+    }
+
+    .auth-right {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px;
+    }
+
+    .auth-form-wrap {
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .auth-form-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 32px;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    .auth-form-sub {
+      font-size: 14px;
+      color: var(--ink3);
+      margin-bottom: 40px;
+    }
+
+    .auth-form-sub a {
+      color: var(--ink);
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .field { margin-bottom: 20px; }
+
+    .field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      padding: 11px 14px;
+      background: white;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      color: var(--ink);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus { border-color: var(--ink); }
+
+    .btn-submit {
+      width: 100%;
+      padding: 12px;
+      background: var(--ink);
+      color: var(--cream);
+      border: none;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      margin-top: 4px;
+      transition: background 0.15s;
+    }
+
+    .btn-submit:hover { background: var(--ink2); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .auth-notice {
+      margin-top: 16px;
+      padding: 10px 14px;
+      border-radius: 2px;
+      font-size: 13px;
+      display: none;
+    }
+
+    .auth-notice.err { background: var(--red-light); color: var(--red); display: block; border-left: 3px solid var(--red); }
+    .auth-notice.ok { background: var(--green-light); color: var(--green); display: block; border-left: 3px solid var(--green); }
+
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 28px 0;
+      color: var(--rule);
+      font-size: 12px;
+    }
+
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--rule);
+    }
+
+    /* ── APP ── */
+    #app-screen { display: none; min-height: 100vh; flex-direction: column; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      height: 60px;
+      border-bottom: 1px solid var(--rule);
+      background: white;
+    }
+
+    .header-brand {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      letter-spacing: -0.3px;
+    }
+
+    .header-brand em { font-style: italic; color: var(--ink3); }
+
+    .header-nav {
+      display: flex;
+      gap: 0;
+    }
+
+    .nav-btn {
+      padding: 6px 20px;
+      border: 1px solid var(--rule);
+      background: transparent;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all 0.15s;
+      margin-left: -1px;
+    }
+
+    .nav-btn:first-child { border-radius: 2px 0 0 2px; }
+    .nav-btn:last-child { border-radius: 0 2px 2px 0; }
+    .nav-btn.active { background: var(--ink); color: var(--cream); border-color: var(--ink); z-index: 1; }
+    .nav-btn:not(.active):hover { background: var(--cream2); }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+      color: var(--ink3);
+    }
+
+    .header-right strong { color: var(--ink); font-weight: 500; }
+
+    .btn-out {
+      padding: 5px 14px;
+      border: 1px solid var(--rule);
+      background: transparent;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 12px;
+      color: var(--ink3);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+
+    .btn-out:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── EDITOR TAB ── */
+    .tab { display: none; flex: 1; }
+    .tab.active { display: flex; }
+
+    #editor-tab {
+      flex-direction: row;
+      height: calc(100vh - 60px);
+    }
+
+    /* LEFT — code */
+    .code-pane {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--rule);
+    }
+
+    .pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--rule);
+      background: white;
+    }
+
+    .pane-label {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--ink3);
+    }
+
+    .lang-tag {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      padding: 3px 8px;
+      background: var(--cream2);
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+      color: var(--ink3);
+    }
+
+    #code-input {
+      flex: 1;
+      width: 100%;
+      padding: 24px 28px;
+      background: var(--cream);
+      border: none;
+      font-family: 'DM Mono', monospace;
+      font-size: 14px;
+      line-height: 1.8;
+      color: var(--ink);
+      resize: none;
+      outline: none;
+    }
+
+    .code-footer {
+      padding: 12px 20px;
+      border-top: 1px solid var(--rule);
+      background: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-hint {
+      font-size: 12px;
+      color: var(--ink3);
+    }
+
+    .btn-run {
+      padding: 9px 28px;
+      background: var(--green);
+      color: white;
+      border: none;
+      border-radius: 2px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-run:hover { background: #235a41; }
+    .btn-run:disabled { background: var(--ink3); cursor: not-allowed; }
+
+    /* RIGHT — output */
+    .output-pane {
+      width: 400px;
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      background: white;
+    }
+
+    .output-status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.5px;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--rule);
+    }
+
+    .status-dot.running { background: var(--amber); }
+    .status-dot.success { background: var(--green); }
+    .status-dot.error { background: var(--red); }
+
+    .exec-time-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--ink3);
+    }
+
+    #output-box {
+      flex: 1;
+      padding: 24px 20px;
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      color: var(--ink);
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    #output-box.placeholder-text { color: var(--ink3); font-style: italic; font-family: 'DM Sans', sans-serif; font-size: 14px; }
+    #output-box.error-out { color: var(--red); }
+
+    .output-stats {
+      border-top: 1px solid var(--rule);
+      padding: 16px 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 0;
+    }
+
+    .mini-stat {
+      padding: 0 16px;
+      border-right: 1px solid var(--rule);
+    }
+
+    .mini-stat:first-child { padding-left: 0; }
+    .mini-stat:last-child { border-right: none; }
+
+    .mini-stat-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink3);
+      margin-bottom: 4px;
+    }
+
+    .mini-stat-val {
+      font-family: 'DM Mono', monospace;
+      font-size: 20px;
+      color: var(--ink);
+    }
+
+    /* ── LEADERBOARD ── */
+    #leaderboard-tab {
+      flex-direction: column;
+      padding: 48px 56px;
+      background: var(--cream);
+      overflow-y: auto;
+    }
+
+    .lb-head {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--rule);
+    }
+
+    .lb-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 36px;
+      letter-spacing: -1px;
+    }
+
+    .lb-title em { font-style: italic; color: var(--ink3); }
+
+    .btn-refresh {
+      font-size: 13px;
+      color: var(--ink3);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .lb-table {
+      background: white;
+      border: 1px solid var(--rule);
+      border-radius: 2px;
+    }
+
+    .lb-thead {
+      display: grid;
+      grid-template-columns: 64px 1fr 120px 120px 140px;
+      padding: 12px 24px;
+      border-bottom: 2px solid var(--ink);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--ink3);
+    }
+
+    .lb-row {
+      display: grid;
+      grid-template-columns: 64px 1fr 120px 120px 140px;
+      padding: 16px 24px;
+      border-bottom: 1px solid var(--rule);
+      align-items: center;
+      transition: background 0.1s;
+    }
+
+    .lb-row:last-child { border-bottom: none; }
+    .lb-row:hover { background: var(--cream); }
+    .lb-row.is-you { background: var(--green-light); }
+
+    .rank-cell {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px;
+      color: var(--ink3);
+    }
+
+    .rank-cell.top { color: var(--ink); font-weight: 600; }
+
+    .name-cell {
+      font-size: 15px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .you-chip {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      background: var(--green);
+      color: white;
+      border-radius: 2px;
+    }
+
+    .mono-cell {
+      font-family: 'DM Mono', monospace;
+      font-size: 13px;
+      color: var(--ink2);
+    }
+
+    .mono-cell.highlight { color: var(--green); font-weight: 500; }
+
+    .lb-empty {
+      padding: 80px 40px;
+      text-align: center;
+    }
+
+    .lb-empty-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 22px;
+      margin-bottom: 8px;
+      color: var(--ink3);
+    }
+
+    .lb-empty-sub {
+      font-size: 14px;
+      color: var(--ink3);
+    }
+
+    /* spinner */
+    .spin {
+      display: inline-block;
+      width: 12px; height: 12px;
+      border: 1.5px solid var(--rule);
+      border-top-color: var(--ink);
+      border-radius: 50%;
+      animation: rot 0.7s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes rot { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="auth-screen">
+  <div class="auth-left">
+    <div>
+      <div class="auth-brand">Code<em>Run</em></div>
+      <div class="auth-tagline">Execute · Compete · Dominate</div>
+    </div>
+    <div class="auth-quote">
+      <p>"Programs must be written for people to read, and only incidentally for machines to execute."</p>
+      <cite>— Harold Abelson</cite>
+    </div>
+  </div>
+  <div class="auth-right">
+    <div class="auth-form-wrap">
+
+      <!-- LOGIN -->
+      <div id="form-login">
+        <div class="auth-form-title">Welcome back.</div>
+        <div class="auth-form-sub">No account? <a onclick="showForm('register')">Create one</a></div>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="l-user" placeholder="your_username" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="l-pass" placeholder="••••••••"/>
+        </div>
+        <button class="btn-submit" onclick="login()">Sign in</button>
+        <div id="login-msg" class="auth-notice"></div>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="form-register" style="display:none">
+        <div class="auth-form-title">Create account.</div>
+        <div class="auth-form-sub">Already have one? <a onclick="showForm('login')">Sign in</a></div>
+        <div class="field">
+          <label>Username</label>
+          <input type="text" id="r-user" placeholder="choose_a_username" autocomplete="off"/>
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input type="password" id="r-pass" placeholder="••••••••"/>
+        </div>
+        <button class="btn-submit" onclick="register()">Create account</button>
+        <div id="reg-msg" class="auth-notice"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app-screen">
+  <header>
+    <div class="header-brand">Code<em>Run</em></div>
+    <div class="header-nav">
+      <button class="nav-btn active" onclick="switchTab('editor')">Editor</button>
+      <button class="nav-btn" onclick="switchTab('leaderboard')">Leaderboard</button>
+    </div>
+    <div class="header-right">
+      Signed in as <strong id="hdr-user"></strong>
+      <button class="btn-out" onclick="logout()">Sign out</button>
+    </div>
+  </header>
+
+  <div style="display:flex;flex:1;flex-direction:column;">
+
+    <!-- EDITOR -->
+    <div id="editor-tab" class="tab active">
+      <div class="code-pane">
+        <div class="pane-header">
+          <span class="pane-label">Editor</span>
+          <span class="lang-tag">python 3.11</span>
+        </div>
+        <textarea id="code-input" spellcheck="false" placeholder="# Write Python code here&#10;&#10;print('Hello, CodeRun!')"></textarea>
+        <div class="code-footer">
+          <span class="code-hint">Tab inserts 4 spaces &nbsp;·&nbsp; Standard library supported</span>
+          <button class="btn-run" id="run-btn" onclick="runCode()">▶️ &nbsp;Run</button>
+        </div>
+      </div>
+
+      <div class="output-pane">
+        <div class="output-status-bar">
+          <div class="status-label">
+            <div class="status-dot" id="s-dot"></div>
+            <span id="s-text" style="color:var(--ink3)">Ready</span>
+          </div>
+          <span class="exec-time-label" id="exec-time"></span>
+        </div>
+        <div id="output-box" class="placeholder-text">Run your code to see output here.</div>
+        <div class="output-stats">
+          <div class="mini-stat">
+            <div class="mini-stat-label">Runs</div>
+            <div class="mini-stat-val" id="s-runs">0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Passed</div>
+            <div class="mini-stat-val" id="s-pass">0</div>
+          </div>
+          <div class="mini-stat">
+            <div class="mini-stat-label">Failed</div>
+            <div class="mini-stat-val" id="s-fail">0</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LEADERBOARD -->
+    <div id="leaderboard-tab" class="tab">
+      <div class="lb-head">
+        <div class="lb-title">Global <em>Rankings</em></div>
+        <button class="btn-refresh" onclick="loadLB()">Refresh</button>
+      </div>
+      <div class="lb-table">
+        <div class="lb-thead">
+          <div>Rank</div>
+          <div>Player</div>
+          <div>Total</div>
+          <div>Successful</div>
+          <div>Avg. Time</div>
+        </div>
+        <div id="lb-body">
+          <div class="lb-empty">
+            <div class="lb-empty-title">No entries yet.</div>
+            <div class="lb-empty-sub">Run some code to appear on the board.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const API      = 'http://localhost:8000';
+  const RES_API  = 'http://localhost:8001';
+  const AUTH_API = 'http://localhost:8002';
+  const LB_API   = 'http://localhost:8003';
+
+  let token    = localStorage.getItem('cr_token');
+  let username = localStorage.getItem('cr_user');
+  let runs = 0, passed = 0, failed = 0;
+
+  if (token && username) bootApp();
+
+  function showForm(f) {
+    document.getElementById('form-login').style.display    = f === 'login'    ? 'block' : 'none';
+    document.getElementById('form-register').style.display = f === 'register' ? 'block' : 'none';
+  }
+
+  function notice(id, msg, type) {
+    const el = document.getElementById(id);
+    el.textContent = msg;
+    el.className = 'auth-notice ' + type;
+  }
+
+  async function register() {
+    const u = document.getElementById('r-user').value.trim();
+    const p = document.getElementById('r-pass').value;
+    if (!u || !p) return notice('reg-msg', 'Please fill in both fields.', 'err');
+    try {
+      const res = await fetch(`${AUTH_API}/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const d = await res.json();
+      if (!res.ok) return notice('reg-msg', d.detail || 'Registration failed.', 'err');
+      notice('reg-msg', 'Account created. You can now sign in.', 'ok');
+      setTimeout(() => showForm('login'), 1200);
+    } catch { notice('reg-msg', 'Could not reach auth service.', 'err'); }
+  }
+
+  async function login() {
+    const u = document.getElementById('l-user').value.trim();
+    const p = document.getElementById('l-pass').value;
+    if (!u || !p) return notice('login-msg', 'Please fill in both fields.', 'err');
+    try {
+      const res = await fetch(`${AUTH_API}/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const d = await res.json();
+      if (!res.ok) return notice('login-msg', d.detail || 'Login failed.', 'err');
+      token = d.token; username = d.username;
+      localStorage.setItem('cr_token', token);
+      localStorage.setItem('cr_user', username);
+      bootApp();
+    } catch { notice('login-msg', 'Could not reach auth service.', 'err'); }
+  }
+
+  function bootApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display  = 'flex';
+    document.getElementById('hdr-user').textContent = username;
+  }
+
+  function logout() {
+    localStorage.removeItem('cr_token');
+    localStorage.removeItem('cr_user');
+    token = null; username = null;
+    document.getElementById('app-screen').style.display  = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+
+  function switchTab(t) {
+    document.querySelectorAll('.nav-btn').forEach((b, i) =>
+      b.classList.toggle('active', (i === 0 && t === 'editor') || (i === 1 && t === 'leaderboard')));
+    document.getElementById('editor-tab').classList.toggle('active', t === 'editor');
+    document.getElementById('leaderboard-tab').classList.toggle('active', t === 'leaderboard');
+    if (t === 'leaderboard') loadLB();
+  }
+
+  function setStatus(state, text) {
+    const dot = document.getElementById('s-dot');
+    const txt = document.getElementById('s-text');
+    dot.className = 'status-dot ' + state;
+    txt.textContent = text;
+    txt.style.color = state === 'success' ? 'var(--green)'
+                    : state === 'error'   ? 'var(--red)'
+                    : state === 'running' ? 'var(--amber)'
+                    : 'var(--ink3)';
+  }
+
+  async function runCode() {
+    const code = document.getElementById('code-input').value;
+    if (!code.trim()) return;
+
+    const btn = document.getElementById('run-btn');
+    const out = document.getElementById('output-box');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spin"></span> &nbsp;Running';
+    out.className = '';
+    out.textContent = '';
+    document.getElementById('exec-time').textContent = '';
+    setStatus('running', 'Running…');
+
+    try {
+      const res = await fetch(`${API}/submit`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ code, language: 'python' })
+      });
+
+      if (res.status === 401) { logout(); return; }
+
+      const d = await res.json();
+      if (!res.ok) {
+        setStatus('error', 'Rejected');
+        out.className = 'error-out';
+        out.textContent = d.detail || 'Submission failed.';
+        failed++;
+        updateStats();
+        reset(btn);
+        return;
+      }
+
+      const jobId = d.job_id;
+      let attempts = 0;
+      const poll = setInterval(async () => {
+        if (++attempts > 20) {
+          clearInterval(poll);
+          setStatus('error', 'Timed out');
+          out.className = 'error-out';
+          out.textContent = 'No response from worker.';
+          failed++; updateStats(); reset(btn);
+          return;
+        }
+        try {
+          const r = await fetch(`${RES_API}/result/` + jobId);
+          if (r.status === 404) return;
+          const result = await r.json();
+          clearInterval(poll);
+          runs++;
+          if (result.status === 'success') {
+            passed++;
+            setStatus('success', 'Success');
+            out.className = '';
+            out.textContent = result.output || '(no output)';
+          } else if (result.status === 'timeout') {
+            failed++;
+            setStatus('error', 'Time limit exceeded');
+            out.className = 'error-out';
+            out.textContent = result.error;
+          } else {
+            failed++;
+            setStatus('error', 'Error');
+            out.className = 'error-out';
+            out.textContent = result.error || 'Unknown error';
+          }
+          if (result.execution_time != null)
+            document.getElementById('exec-time').textContent = result.execution_time + 's';
+          updateStats(); reset(btn);
+        } catch {}
+      }, 1000);
+
+    } catch {
+      setStatus('error', 'Connection error');
+      out.className = 'error-out';
+      out.textContent = 'Could not reach API service.';
+      reset(btn);
+    }
+  }
+
+  function reset(btn) {
+    btn.disabled = false;
+    btn.innerHTML = '▶️ &nbsp;Run';
+  }
+
+  function updateStats() {
+    document.getElementById('s-runs').textContent = runs;
+    document.getElementById('s-pass').textContent = passed;
+    document.getElementById('s-fail').textContent = failed;
+  }
+
+  async function loadLB() {
+    const body = document.getElementById('lb-body');
+    body.innerHTML = '<div class="lb-empty"><div class="lb-empty-sub"><span class="spin"></span> &nbsp;Loading…</div></div>';
+    try {
+      const res = await fetch(`${LB_API}/leaderboard`);
+      const data = await res.json();
+      if (!data.length) {
+        body.innerHTML = '<div class="lb-empty"><div class="lb-empty-title">No entries yet.</div><div class="lb-empty-sub">Run some code to appear on the board.</div></div>';
+        return;
+      }
+      const medals = ['I', 'II', 'III'];
+      body.innerHTML = data.map((row, i) => `
+        <div class="lb-row ${row.username === username ? 'is-you' : ''}">
+          <div class="rank-cell ${i < 3 ? 'top' : ''}">${medals[i] || row.rank}</div>
+          <div class="name-cell">
+            ${row.username}
+            ${row.username === username ? '<span class="you-chip">you</span>' : ''}
+          </div>
+          <div class="mono-cell">${row.total_jobs}</div>
+          <div class="mono-cell highlight">${row.successful_jobs}</div>
+          <div class="mono-cell">${row.avg_execution_time}s</div>
+        </div>
+      `).join('');
+    } catch {
+      body.innerHTML = '<div class="lb-empty"><div class="lb-empty-sub">Failed to load leaderboard.</div></div>';
+    }
+  }
+
+  // Tab key in editor
+  document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('code-input').addEventListener('keydown', e => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const s = e.target.selectionStart;
+        e.target.value = e.target.value.substring(0, s) + '    ' + e.target.value.substring(e.target.selectionEnd);
+        e.target.selectionStart = e.target.selectionEnd = s + 4;
+      }
+    });
+  });
+</script>
+</body>
+</html>
